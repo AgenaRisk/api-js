@@ -150,10 +150,14 @@ const auth = {
 
 export default {
   init,
-  authenticate: (authConfig) => {
+  login: (authConfig) => {
     init({ auth: authConfig });
     auth.reset();
     auth.startAuth();
+  },
+  logout: () => {
+    init({ auth: { username: '', password: '' } });
+    auth.reset();
   },
   getAccessToken: () => ({
     accessToken: auth.accessToken,
