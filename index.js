@@ -45,12 +45,11 @@ const auth = {
   },
 
   sendRequest: async (params) => {
-    const formBody = [];
-    for (const property of params) {
-      const encodedKey = encodeURIComponent(property);
-      const encodedValue = encodeURIComponent(params[property]);
-      formBody.push(`${encodedKey}=${encodedValue}`);
-    }
+    const formBody = Object.keys(params).map((key) => {
+      const encodedKey = encodeURIComponent(key);
+      const encodedValue = encodeURIComponent(params[key]);
+      return `${encodedKey}=${encodedValue}`;
+    });
 
     return await fetch(config.auth.tokenUrl, {
       method: 'POST',
