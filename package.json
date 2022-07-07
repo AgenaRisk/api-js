@@ -3,7 +3,7 @@
   "version": "0.0.1",
   "description": "Agena AI Cloud JavaScript API",
   "exports": {
-    ".": "./src/index.js"
+    ".": "./index.js"
   },
   "type": "module",
   "scripts": {
