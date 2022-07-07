@@ -152,6 +152,7 @@ export default {
   init,
   authenticate: (authConfig) => {
     init({ auth: authConfig });
+    auth.reset();
     auth.startAuth();
   },
   getAccessToken: () => ({
