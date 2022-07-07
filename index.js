@@ -1,5 +1,6 @@
 /* eslint-disable no-return-await */
 /* eslint-disable no-restricted-syntax */
+import fetch from 'cross-fetch';
 
 const config = {
   auth: {
