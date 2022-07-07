@@ -9,7 +9,7 @@ const config = {
     refreshInterval: 500,
     clientId: 'agenarisk-cloud',
     noGiveUp: false,
-    log: false,
+    debug: false,
   },
 };
 
@@ -28,7 +28,7 @@ const auth = {
   refreshTimer: null,
 
   log: (message) => {
-    if (!config.auth.log) {
+    if (!config.auth.debug) {
       return;
     }
     // eslint-disable-next-line no-console
