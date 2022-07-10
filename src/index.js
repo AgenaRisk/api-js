@@ -12,6 +12,14 @@ const config = {
     noGiveUp: false,
     debug: false,
   },
+
+  api: {
+    server: 'https://api.staging.agenarisk.com',
+    pollInterval: 1000,
+    pollMaxAttempts: 1000,
+    debugResponse: false,
+    debug: false,
+  },
 };
 
 const init = (initConfig) => {
@@ -19,6 +27,7 @@ const init = (initConfig) => {
     return;
   }
   config.auth = { ...config.auth, ...initConfig.auth };
+  config.api = { ...config.api, ...initConfig.api };
 };
 
 const auth = {
