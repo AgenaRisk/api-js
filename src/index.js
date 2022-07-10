@@ -45,39 +45,31 @@ const auth = {
     auth.refreshTimer = null;
   },
 
-  sendRequest: async (params) => {
-    const formBody = Object.keys(params).map((key) => {
-      const encodedKey = encodeURIComponent(key);
-      const encodedValue = encodeURIComponent(params[key]);
-      return `${encodedKey}=${encodedValue}`;
-    });
-
-    return await fetch(config.auth.tokenUrl, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/x-www-form-urlencoded',
-      },
-      body: formBody.join('&'),
-    })
-      .then(async (response) => {
-        const tokenData = await response.json();
-        auth.log(tokenData);
-        if (tokenData.error) {
-          if (!config.noGiveUp) {
-            auth.reset();
-          }
-          return null;
-        }
-        return tokenData;
-      })
-      .catch((error) => {
-        auth.log(error);
+  sendRequest: async (params) => await fetch(config.auth.tokenUrl, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/x-www-form-urlencoded',
+    },
+    body: new URLSearchParams(params).toString(),
+  })
+    .then(async (response) => {
+      const tokenData = await response.json();
+      auth.log(tokenData);
+      if (tokenData.error) {
         if (!config.noGiveUp) {
           auth.reset();
         }
         return null;
-      });
-  },
+      }
+      return tokenData;
+    })
+    .catch((error) => {
+      auth.log(error);
+      if (!config.noGiveUp) {
+        auth.reset();
+      }
+      return null;
+    }),
 
   extractToken: (tokenData) => {
     auth.accessToken = tokenData.access_token;
