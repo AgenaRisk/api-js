@@ -151,12 +151,12 @@ const auth = {
 
 export default {
   init,
-  login: (authConfig) => {
+  logIn: (authConfig) => {
     init({ auth: authConfig });
     auth.reset();
     auth.startAuth();
   },
-  logout: () => {
+  logOut: () => {
     init({ auth: { username: '', password: '' } });
     auth.reset();
   },
