@@ -1,3 +1,4 @@
+/* eslint-disable no-console */
 /* eslint-disable no-return-await */
 /* eslint-disable no-restricted-syntax */
 import fetch from 'cross-fetch';
@@ -19,6 +20,7 @@ const config = {
     pollMaxAttempts: 1000,
     debugResponse: false,
     debug: false,
+    debugLevel: 1,
   },
 };
 
@@ -30,6 +32,65 @@ const init = (initConfig) => {
   config.api = { ...config.api, ...initConfig.api };
 };
 
+const functions = {
+  delay: (ms, v) => new Promise((resolve) => {
+    setTimeout(resolve.bind(null, v), ms);
+  }),
+
+  messageType: {
+    Error: 'Error',
+    Warning: 'Warning',
+    Log: 'Log',
+  },
+
+  printLog: (message) => {
+    if (!console) {
+      return;
+    }
+    if (typeof console.log === 'function') {
+      console.log(message);
+    }
+  },
+
+  printWarning: (message) => {
+    if (!console) {
+      return;
+    }
+    if (typeof console.warn === 'function') {
+      console.warn(message);
+    } else {
+      functions.printLog(message);
+    }
+  },
+
+  printError: (message) => {
+    if (!console) {
+      return;
+    }
+    if (typeof console.error === 'function') {
+      console.error(message);
+    } else {
+      functions.printWarning(message);
+    }
+  },
+
+  log: (message, messageType = functions.messageType.Log) => {
+    switch (messageType) {
+      case functions.messageType.Error:
+        functions.printError(message);
+        break;
+
+      case functions.messageType.Warning:
+        functions.printWarning(message);
+        break;
+
+      case functions.messageType.Log:
+      default:
+        functions.printLog(message);
+    }
+  },
+};
+
 const auth = {
   accessToken: null,
   accessTokenExpiry: new Date().getTime(),
@@ -37,12 +98,11 @@ const auth = {
   refreshTokenExpiry: new Date().getTime(),
   refreshTimer: null,
 
-  log: (message) => {
+  log: (message, messageType = functions.messageType.Log) => {
     if (!config.auth.debug) {
       return;
     }
-    // eslint-disable-next-line no-console
-    console.log(message);
+    functions.log(message, messageType);
   },
 
   reset: () => {
@@ -65,16 +125,18 @@ const auth = {
       const tokenData = await response.json();
       auth.log(tokenData);
       if (tokenData.error) {
-        if (!config.noGiveUp) {
+        if (!config.noGiveUp || auth.refreshTokenExpiry >= new Date().getTime()) {
           auth.reset();
         }
+        functions.log(tokenData.error, functions.messageType.Error);
         return null;
       }
       return tokenData;
     })
     .catch((error) => {
-      auth.log(error);
+      functions.log(error, functions.messageType.Error);
       if (!config.noGiveUp) {
+        functions.log('Agena authentication: stopping refresh timer', functions.messageType.Warning);
         auth.reset();
       }
       return null;
