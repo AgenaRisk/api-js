@@ -9,6 +9,7 @@ const config = {
     username: '',
     password: '',
     refreshInterval: 500,
+    refreshPreemptBy: 5000,
     clientId: 'agenarisk-cloud',
     noGiveUp: false,
     debug: false,
@@ -24,6 +25,19 @@ const config = {
   },
 };
 
+/**
+ * Supported fields are:
+ * auth.username
+ * auth.password
+ * auth.refreshInterval - how often to check if the accessToken needs refreshing; default: 500 ms
+ * auth.refreshPreemptBy - will attempt to refresh if accessToken expiry > this value plus new Date().getTime(); default: 5000 ms
+ * auth.noGiveUp: ignore errors during refreshing and keep trying; default: false
+ * auth.debug: will print additional messages to console global object; default: false
+ *
+ *
+ * @param {Object} initConfig
+ * @returns
+ */
 const init = (initConfig) => {
   if (!(typeof initConfig === 'object')) {
     return;
@@ -168,7 +182,7 @@ const auth = {
   },
 
   useRefreshToken: async () => {
-    if (auth.accessToken && new Date().getTime() <= auth.accessTokenExpiry) {
+    if (auth.accessToken && new Date().getTime() + config.auth.refreshPreemptBy <= auth.accessTokenExpiry) {
       // Token still valid
       return;
     }
@@ -189,10 +203,10 @@ const auth = {
       return;
     }
 
-    auth.extract(tokenData);
+    auth.extractToken(tokenData);
   },
 
-  startAuth: () => {
+  startAuth: async () => {
     if (auth.refreshTimer !== null) {
       return;
     }
@@ -200,23 +214,29 @@ const auth = {
       throw new Error('Need valid username and password');
     }
     auth.refreshTimer = 1; // Make sure only one instance of this command is executed
-    auth.useCredentials();
+    await auth.useCredentials();
     if (!auth.refreshToken) {
       auth.reset();
       return;
     }
     auth.refreshTimer = setInterval(() => {
-      auth.refreshToken();
+      auth.useRefreshToken();
     }, config.auth.refreshInterval);
   },
 };
 
 export default {
   init,
-  logIn: (authConfig) => {
+
+  /**
+   * Unless initialised prior to this call, include object with username and password fields
+   *
+   * @param {Object} authConfig optional override to auth config
+   */
+  logIn: async (authConfig) => {
     init({ auth: authConfig });
     auth.reset();
-    auth.startAuth();
+    await auth.startAuth();
   },
   logOut: () => {
     init({ auth: { username: '', password: '' } });
