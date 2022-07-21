@@ -396,6 +396,7 @@ const api = {
     if (originalResponse.code === 202 && originalResponse.pollingUrl) {
       // Pending or processing, polling is required
       let attempt = 0;
+      // eslint-disable-next-line no-constant-condition
       while (true) {
         // eslint-disable-next-line no-await-in-loop
         await functions.delay(config.api.pollInterval);
