@@ -331,7 +331,7 @@ const api = {
     displayable: true,
     active: true,
     observations: observations.map((obsSummary) => {
-      if (!obsSummary.node || !obsSummary.network || (!obsSummary.entries && obsSummary.entry)) {
+      if (!obsSummary.node || !obsSummary.network || !(obsSummary.entries || obsSummary.entry)) {
         api.log('Observations must specify node, network and entry/entries', functions.messageType.Error);
         return undefined;
       }
@@ -375,6 +375,7 @@ const api = {
     resolveBearerToken,
     model,
     observations,
+    dataSet,
     syncWait = true,
     body = {},
     appId,
@@ -384,7 +385,8 @@ const api = {
       ...(typeof model === 'object' && { model }),
       ...(syncWait && { 'sync-wait': syncWait }),
       ...(appId && { appId }),
-      ...(observations && { dataSet: api.createDataset(observations) }),
+      ...(observations && !dataSet && { dataSet: api.createDataset({ observations }) }),
+      ...(dataSet && { dataSet: api.createDataset(dataSet) }),
     };
 
     const originalResponse = await api.sendRequest({
