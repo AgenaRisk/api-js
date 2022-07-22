@@ -407,6 +407,7 @@ const api = {
           url: originalResponse.pollingUrl,
           ...(typeof resolveBearerToken === 'function' && { bearerToken: resolveBearerToken() }),
         });
+        api.log({ message: pollResponse, debugLevel: 11 });
 
         if (pollResponse.code !== 202) {
           // Job completed
