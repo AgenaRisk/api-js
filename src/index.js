@@ -53,7 +53,7 @@ const init = (initConfig) => {
 };
 
 const functions = {
-  delay: (ms, v) => new Promise((resolve) => {
+  sleep: (ms, v) => new Promise((resolve) => {
     setTimeout(resolve.bind(null, v), ms);
   }),
 
@@ -401,7 +401,7 @@ const api = {
       // eslint-disable-next-line no-constant-condition
       while (true) {
         // eslint-disable-next-line no-await-in-loop
-        await functions.delay(config.api.pollInterval);
+        await functions.sleep(config.api.pollInterval);
         api.log({ message: `Polling attempt ${attempt}: ${originalResponse.pollingUrl}` });
         // eslint-disable-next-line no-await-in-loop
         const pollResponse = await api.sendRequest({
@@ -456,4 +456,5 @@ export default {
     refreshTokenExpiry: auth.refreshTokenExpiry,
   }),
   calculate: api.calculate,
+  createDataset: api.createDataset,
 };
