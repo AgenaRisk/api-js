@@ -438,7 +438,7 @@ export default {
   /**
    * Unless initialised prior to this call, include object with username and password fields
    *
-   * @param {Object} authConfig optional override to auth config
+   * @param {object} authConfig optional override to auth config
    */
   logIn: async (authConfig) => {
     init({ auth: authConfig });
