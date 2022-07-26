@@ -430,6 +430,92 @@ const api = {
       return originalResponse;
     }
   },
+
+  /**
+   *
+   * @param {*} data CSV data (either string content of CSV file or array of string lines) with header row;
+   *  first column is expected to be dataset ID; second column will be assumed to be network ID unless .network is also passed to this function
+   *
+   * @param {string} network ID of the network; if missing will use second column
+   *
+   * @param {string} network column separator in data; default: ,
+   *
+   * @returns array of dataset objects each
+   */
+  readCsv: ({ data, network, separator = ',' }) => {
+    let rowsData;
+    if (typeof data === 'string') {
+      rowsData = data.trim().split(/\r?\n/);
+    } else {
+      rowsData = data;
+    }
+
+    const headerRowFields = rowsData[0].split(separator);
+    const headers = headerRowFields.map((field) => {
+      const parts = field.split(/ ?= ?/);
+      const virtual = parts.length > 1;
+      return {
+        virtual,
+        node: parts[0].trim(),
+        state: `${parts[1]}`.trim(),
+      };
+    });
+
+    const dataSets = rowsData.slice(1).map((rowData) => {
+      const fields = rowData.split(/ ?, ?/).map((rawField) => rawField.replace(/^ *" */, '').replace(/ *" *$/, ''));
+
+      const observationMap = {};
+
+      // eslint-disable-next-line no-loop-func
+      fields.forEach((field, j) => {
+        if (j === 0) {
+          // Data set ID
+          return;
+        }
+
+        if (!network && j === 1) {
+          // Network ID
+          return;
+        }
+
+        if (field === '') {
+          // Empty value
+          return;
+        }
+
+        const header = headers[j];
+        if (!observationMap[header.node]) {
+          observationMap[header.node] = {
+            network: network || fields[1],
+            node: header.node,
+            entries: [],
+          };
+        }
+
+        if (header.virtual) {
+          const weight = parseFloat(field);
+          observationMap[header.node].entries.push({
+            value: header.state,
+            weight,
+          });
+        } else {
+          observationMap[header.node].entries.push({
+            value: field,
+            weight: 1,
+          });
+        }
+      });
+
+      const dataSet = {
+        id: fields[0],
+        observations: Object.values(observationMap),
+      };
+
+      return dataSet;
+    });
+
+    return dataSets;
+  },
 };
 
 export default {
@@ -457,4 +543,5 @@ export default {
   }),
   calculate: api.calculate,
   createDataset: api.createDataset,
+  readCsv: api.readCsv,
 };
