@@ -109,6 +109,15 @@ const functions = {
         functions.printLog(message);
     }
   },
+
+  getDuration: (totalSeconds) => {
+    let secs = totalSeconds;
+    const hours = Math.floor(secs / 3600);
+    secs %= 3600;
+    const minutes = Math.floor(secs / 60);
+    const seconds = (secs % 60).toFixed(3);
+    return `${hours} hours, ${minutes} minutes, ${seconds} seconds`;
+  },
 };
 
 const auth = {
