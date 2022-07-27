@@ -278,12 +278,12 @@ const api = {
       }
     }
 
-    api.log({ message: `Sending ${method} request to: ${requestUrl}` });
-    api.log({ message: 'Effective headers:', debugLevel: 5 });
-    api.log({ message: effectiveHeaders, debugLevel: 5 });
+    api.log({ message: `Sending ${method} request to: ${requestUrl}`, debugLevel: 5 });
+    api.log({ message: 'Effective headers:', debugLevel: 8 });
+    api.log({ message: effectiveHeaders, debugLevel: 8 });
     if (body) {
-      api.log({ message: 'Request body:', debugLevel: 5 });
-      api.log({ message: body, debugLevel: 5 });
+      api.log({ message: 'Request body:', debugLevel: 9 });
+      api.log({ message: body, debugLevel: 9 });
     }
 
     return await fetch(requestUrl, {
@@ -413,6 +413,7 @@ const api = {
       while (true) {
         // eslint-disable-next-line no-await-in-loop
         await functions.sleep(pollInterval);
+        api.log({ message: `Polling attempt ${attempt}: ${originalResponse.pollingUrl}`, debugLevel: 7 });
         // eslint-disable-next-line no-await-in-loop
         const pollResponse = await api.sendRequest({
           method: 'GET',
