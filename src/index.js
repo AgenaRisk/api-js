@@ -68,7 +68,7 @@ const functions = {
       return;
     }
     if (typeof console.log === 'function') {
-      console.log(message);
+      console.log(new Date().toISOString(), message);
     }
   },
 
@@ -77,7 +77,7 @@ const functions = {
       return;
     }
     if (typeof console.warn === 'function') {
-      console.warn(message);
+      console.warn(new Date().toISOString(), message);
     } else {
       functions.printLog(message);
     }
@@ -88,7 +88,7 @@ const functions = {
       return;
     }
     if (typeof console.error === 'function') {
-      console.error(message);
+      console.error(new Date().toISOString(), message);
     } else {
       functions.printWarning(message);
     }
