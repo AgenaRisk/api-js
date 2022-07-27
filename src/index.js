@@ -118,6 +118,8 @@ const functions = {
     const seconds = (secs % 60).toFixed(3);
     return `${hours} hours, ${minutes} minutes, ${seconds} seconds`;
   },
+
+  randBetween: (min, max) => Math.floor(Math.random() * (max - min + 1) + min),
 };
 
 const auth = {
@@ -527,6 +529,148 @@ const api = {
 
     return dataSets;
   },
+
+  calculateBatch: async ({
+    server = config.api.server,
+    resolveBearerToken,
+    model,
+    appId,
+    dataSets,
+  }) => {
+    api.log({ message: `Calculating a batch of: ${dataSets.length} datasets`, debugLevel: 4 });
+
+    const startTime = new Date().getTime();
+
+    const responses = [];
+    const results = [];
+
+    let completedJobs = 0;
+    let completedTime = 0;
+    let longestCalculationTime = Number.MIN_VALUE;
+    let shortestCalculationTime = Number.MAX_VALUE;
+    let averageCalculationTime = 0;
+    let averageRecentWaitTime = 0;
+    let jobsToSchedule = 1;
+    let totalWaste = 0;
+
+    const calculateAverageRecentWaitTime = (window = 4) => {
+      const waitTimes = responses
+        .slice(-window)
+        .map((response) => Number.parseInt(response.duration.turnaround, 10) - Number.parseInt(response.duration.calculation, 10))
+        .filter((time) => !Number.isNaN(time) && Number.isFinite(time));
+      return Math.ceil(waitTimes.reduce((sum, el) => sum + el, 0) / waitTimes.length);
+    };
+
+    const updateCounters = (response) => {
+      completedJobs += 1;
+      completedTime += Number.parseInt(response.duration.calculation, 10);
+      averageCalculationTime = Math.ceil(completedTime / completedJobs);
+      averageRecentWaitTime = calculateAverageRecentWaitTime();
+      longestCalculationTime = Math.max(longestCalculationTime, response.duration.calculation);
+      shortestCalculationTime = Math.min(shortestCalculationTime, response.duration.calculation);
+      if (averageRecentWaitTime > 500 && averageRecentWaitTime >= averageCalculationTime) {
+        jobsToSchedule = Math.max(1, jobsToSchedule - 1);
+      } else {
+        // jobsToSchedule = Math.min(4, jobsToSchedule + 1);
+        jobsToSchedule += 1;
+      }
+      // console.log(`completedJobs: ${completedJobs}; jobsToSchedule: ${jobsToSchedule}`);
+    };
+
+    let dsIndex = 0;
+    let dssToRun = [];
+    api.log({
+      message: [
+        '',
+        'i',
+        'Batch',
+        'Dataset',
+        'Calc_ms', // Calculation on the server
+        'Turn_ms', // Turnaround time on the server
+        'Wasted', // Time between job completion and retrieval
+        'Polling',
+        'Avg_clc', // Average calculation after completing this job
+        'Avg_w8', // Average wait after completing this job
+        'NBS', // Next batch size
+        'T_calc', // Total calculation time on the server
+        'T_dur', // Total duration (batch durations)
+      ].join('\t'),
+      debugLevel: 4,
+    });
+
+    let batchCounter = 0;
+
+    do {
+      dssToRun = dataSets.slice(dsIndex, dsIndex + jobsToSchedule);
+      if (dssToRun.length === 0) {
+        // console.log(`Empty queue at index ${dsIndex} of ${jobsToSchedule} in ${dataSets.length}`);
+        break;
+      }
+
+      api.log({ message: `Scheduling: ${dssToRun.length} datasets from index ${dsIndex}`, debugLevel: 5 });
+
+      // eslint-disable-next-line no-await-in-loop, no-loop-func
+      await Promise.all(dssToRun.map(async (dataSet, i) => {
+        const jobStartTime = new Date().getTime();
+        const pollInterval = Math.ceil(Math.max(1000, 1000 + (averageCalculationTime + averageRecentWaitTime) / 4));
+        // const pollInterval = 1000 + functions.randBetween(1000, 5000);
+        api.log({ message: `Sending calculate request for Dataset ${dataSet.id} with pollingInterval: ${pollInterval}`, debugLevel: 5 });
+        const response = await api.calculate({
+          server, resolveBearerToken, model, appId, dataSet, syncWait: true, pollInterval,
+        });
+        responses.push(response);
+        // eslint-disable-next-line no-param-reassign
+        dataSet.done = true;
+        if (!response.results) {
+          functions.log(`Dataset ${dataSet.id} failed to calculate:`, functions.messageType.Error);
+          functions.log(response.messages, functions.messageType.Error);
+        } else {
+          const jobEndTime = new Date().getTime();
+          updateCounters(response);
+          const waste = jobEndTime - jobStartTime - response.duration.turnaround;
+          totalWaste += waste;
+          if (config.api.debug) {
+            const message = [
+              '',
+              i + dsIndex,
+              batchCounter,
+              dataSet.id,
+              response.duration.calculation,
+              response.duration.turnaround,
+              waste,
+              pollInterval,
+              averageCalculationTime,
+              averageRecentWaitTime,
+              jobsToSchedule,
+              completedTime,
+              new Date().getTime() - startTime,
+            ].join('\t');
+            api.log({ message, debugLevel: 4 });
+          }
+
+          results.push({
+            id: dataSet.id,
+            results: response.results,
+          });
+        }
+      }));
+      batchCounter += 1;
+      dsIndex += dssToRun.length;
+    } while (dssToRun.length > 0);
+
+    const endTime = new Date().getTime();
+
+    api.log({ message: 'Batch calculation finished', debugLevel: 2 });
+    api.log({ message: `Datasets: ${dataSets.length}`, debugLevel: 2 });
+    api.log({ message: `Total time: ${functions.getDuration((endTime - startTime) / 1000)}`, debugLevel: 2 });
+    api.log({ message: `Total waste: ${totalWaste} ms`, debugLevel: 2 });
+    api.log({ message: `Average calculate time: ${averageCalculationTime.toFixed(2)} ms`, debugLevel: 2 });
+    api.log({ message: `Longest calculate time: ${longestCalculationTime} ms`, debugLevel: 2 });
+    api.log({ message: `Shortest calculate time: ${shortestCalculationTime} ms`, debugLevel: 2 });
+
+    return results;
+  },
+
 };
 
 export default {
@@ -553,6 +697,7 @@ export default {
     refreshTokenExpiry: auth.refreshTokenExpiry,
   }),
   calculate: api.calculate,
+  calculateBatch: api.calculateBatch,
   createDataset: api.createDataset,
   readCsv: api.readCsv,
 };
