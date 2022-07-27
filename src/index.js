@@ -367,6 +367,7 @@ const api = {
    * @param {array} observations - Array of observations, where each observation has: network (string ID), node (string ID) and entry (string value);
    *  or is formatted according to https://agenarisk.atlassian.net/wiki/spaces/PROTO/pages/785711115 section Common Elements: Data Set
    * @param {boolean} syncWait - Whether to wait on the first request before falling back to polling; optional; default: true
+   * @param {number} pollInterval - interval between polling attempts; default: config.api.pollInterval
    *
    * @returns calculation job response Object or error object
    */
@@ -379,6 +380,7 @@ const api = {
     syncWait = true,
     body = {},
     appId,
+    pollInterval = config.api.pollInterval,
   }) => {
     const effectiveBody = {
       ...body,
@@ -401,8 +403,7 @@ const api = {
       // eslint-disable-next-line no-constant-condition
       while (true) {
         // eslint-disable-next-line no-await-in-loop
-        await functions.sleep(config.api.pollInterval);
-        api.log({ message: `Polling attempt ${attempt}: ${originalResponse.pollingUrl}` });
+        await functions.sleep(pollInterval);
         // eslint-disable-next-line no-await-in-loop
         const pollResponse = await api.sendRequest({
           method: 'GET',
