@@ -1,0 +1,4 @@
+_dataset,Miles_per_year,Reliability,car_type = Small,car_type = Medium,car_type
+1,1000,High,0.7,0.3,
+2,2000,Medium,,,Large
+3,3000,High,,,Small
