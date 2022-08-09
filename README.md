@@ -53,6 +53,19 @@ await agena.logIn({username: 'test@example.com', password: '12344567890'});
 ```
 Once authenticated, subsequent calls to `agena.calculate()` or `agena.calculateBatch()` will automatically use the correct token when making requests to the API server.
 
+In case you implement calculation requests yourself, you can use this library to authenticate your custom requests, e.g.
+```
+fetch(url, {
+    method: 'POST',
+    body,
+    headers: {
+        Accept: 'application/json',
+        'Content-Type': 'text/plain; charset=utf-8',
+        Authorization: `Bearer ${agena.getAccessToken().accessToken}`
+    }
+})...
+```
+
 ## Examples
 This simple example authenticates and calculates a very basic model with a single observation.
 ```
