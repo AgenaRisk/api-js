@@ -5,7 +5,7 @@ import fetch from 'cross-fetch';
 
 const config = {
   auth: {
-    tokenUrl: 'https://keycloak.prod.agenarisk.com/realms/cloud/protocol/openid-connect/token',
+    tokenUrl: 'https://auth.agena.ai/realms/cloud/protocol/openid-connect/token',
     username: '',
     password: '',
     refreshInterval: 500,
@@ -16,7 +16,7 @@ const config = {
   },
 
   api: {
-    server: 'https://api.staging.agenarisk.com',
+    server: 'https://api.prod.agenarisk.com',
     pollInterval: 1000,
     pollMaxAttempts: 1000,
     debugResponse: false,
@@ -37,7 +37,7 @@ const config = {
  * * auth.noGiveUp: ignore errors during refreshing and keep trying; default: false
  * * auth.debug: will print additional messages to console global object; default: false
  *
- * * api.server: root url of the API server; default: https://api.staging.agenarisk.com
+ * * api.server: root url of the API server; default: https://api.prod.agenarisk.com
  * * api.pollInterval: interval between polling attempts; default: 1000 ms
  * * api.pollMaxAttempts: max attempts for polling after which the function gives up and returns an error; default: 1000
  * * api.debugResponse: will include original response (before JSON conversion) in the field debugResponse (except for connection errors); default: false
