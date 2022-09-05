@@ -1,0 +1,17 @@
+[
+    {
+        "network": "Car Costs_0",
+        "node": "car_type",
+        "entry": "Small"
+    },
+    {
+        "network": "Car Costs_0",
+        "node": "Reliability",
+        "entry": "Low"
+    },
+    {
+        "network": "Car Costs_0",
+        "node": "Miles_per_year",
+        "entry": "7000"
+    }
+]
