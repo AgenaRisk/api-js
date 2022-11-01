@@ -1,16 +1,16 @@
 import fs from 'fs';
 import path from 'path';
-import agena from '../src/index.js';
+import agena from '../../src/index.js';
 
 let model;
 let dataSets;
 
 try {
   // Resolving from project root
-  model = JSON.parse(fs.readFileSync(path.resolve('./examples/example-batch-calculation.json'), 'utf8')).model;
+  model = JSON.parse(fs.readFileSync(path.resolve('./examples/batch-calculation/model.json'), 'utf8')).model;
   dataSets = agena.readCsv({
     network: 'Car Costs_0',
-    data: fs.readFileSync(path.resolve('./examples/example-batch-calculation.csv'), 'utf8'),
+    data: fs.readFileSync(path.resolve('./examples/batch-calculation/data.csv'), 'utf8'),
   });
 } catch (err) {
   console.error(err);
@@ -18,6 +18,8 @@ try {
 }
 
 // console.log(JSON.stringify(dataSets, null, 2))
+
+// You can use slice to calculate only a subset of datasets in the data file
 // dataSets = dataSets.slice(1,10);
 
 (async () => {
@@ -37,7 +39,7 @@ try {
 
   try {
     console.log('Writing results');
-    fs.writeFileSync(path.resolve('./examples/example-batch-calculation-output.json'), JSON.stringify(results));
+    fs.writeFileSync(path.resolve('./examples/batch-calculation/output.json'), JSON.stringify(results));
   } catch (error) {
     console.log(error);
   }
