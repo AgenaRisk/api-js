@@ -445,13 +445,13 @@ const api = {
   },
 
   /**
-   *
    * @param {*} data CSV data (either string content of CSV file or array of string lines) with header row;
-   *  first column is expected to be dataset ID; second column will be assumed to be network ID unless .network is also passed to this function
+   *  This assumes your observations are in a single network, if you use multiple networks with observations, do not use this function;
+   *  First column is expected to be dataset ID; second column will be assumed to be network ID unless network is also passed to this function.
    *
    * @param {string} network ID of the network; if missing will use second column
    *
-   * @param {string} network column separator in data; default: ,
+   * @param {string} separator column separator in data; default: ,
    *
    * @returns array of dataset objects each
    */
