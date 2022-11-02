@@ -78,14 +78,14 @@ if (outputDsIds.length > 0) {
     const results = fs.readFileSync(resultCacheFile, 'utf8')
       .split('\n')
       .filter((line) => line.trim() !== '')
-      .map((line) => JSON.parse(line))
+      .map((line) => JSON.parse(line));
       // If you want results also sorted by ID then add sort stage here
       // .sort((a, b) => a.id.localeCompare(b.id)) // If you have String IDs
-      .sort((a, b) => Number.parseInt(a.id, 10) - Number.parseInt(b.id, 10)); // If have integer IDs
+      // .sort((a, b) => Number.parseInt(a.id, 10) - Number.parseInt(b.id, 10)) // If have integer IDs
 
     fs.writeFileSync(outputFile, JSON.stringify(results));
   } catch (error) {
-    console.log('Failed to write results', error);
+    console.log('Failed to write results', error.message);
     process.exit(1);
   }
 
