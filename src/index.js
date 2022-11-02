@@ -373,7 +373,7 @@ const api = {
    *
    * @param {string} server - API server root; default: api.config.server
    * @param {function} resolveBearerToken - function to dynamically resolve accessToken valid at the time of the original or some future polling request; default: agena.getAccessToken().accessToken
-   * @param {object} model - Object representing the model; will override body
+   * @param {object} model - Object representing the model
    * @param {string} appId - ID of the cloud App that holds the model to calculate - can be used instead of supplying the actual model
    * @param {array} observations - Array of observations, where each observation has: network (string ID), node (string ID) and entry (string value);
    *  or is formatted according to https://agenarisk.atlassian.net/wiki/spaces/PROTO/pages/785711115 section Common Elements: Data Set
@@ -530,12 +530,25 @@ const api = {
     return dataSets;
   },
 
+  /**
+   * Calculates a batch of datasets and returns an array of calculated dataset objects each with a results array
+   *
+   * @param {string} server - API server root; default: api.config.server
+   * @param {function} resolveBearerToken - function to dynamically resolve accessToken valid at the time of the original or some future polling request; default: agena.getAccessToken().accessToken
+   * @param {object} model - Object representing the model
+   * @param {string} appId - ID of the cloud App that holds the model to calculate - can be used instead of supplying the actual model
+   * @param {array} dataSets - Array of dataset objects formatted according to https://agenarisk.atlassian.net/wiki/spaces/PROTO/pages/785711115 section Common Elements: Data Set
+   * @param {function} dataSetCallback - Optional function f(x) to be called after a dataset is calculated, where x is the calculated dataset object
+   *
+   * @returns array of calculated dataset objects
+   */
   calculateBatch: async ({
     server = config.api.server,
     resolveBearerToken,
     model,
     appId,
     dataSets,
+    dataSetCallback,
   }) => {
     api.log({ message: `Calculating a batch of: ${dataSets.length} datasets`, debugLevel: 4 });
 
@@ -648,10 +661,16 @@ const api = {
             api.log({ message, debugLevel: 4 });
           }
 
-          results.push({
+          const calculatedDs = {
             id: dataSet.id,
             results: response.results,
-          });
+          };
+
+          results.push(calculatedDs);
+
+          if (typeof dataSetCallback === 'function') {
+            dataSetCallback(calculatedDs);
+          }
         }
       }));
       batchCounter += 1;
