@@ -640,6 +640,7 @@ const api = {
           functions.log(`Dataset ${dataSet.id} failed to calculate:`, functions.messageType.Error);
           functions.log(response.messages, functions.messageType.Error);
           if (Array.isArray(errorsArray)) {
+            errorsArray.push(`Dataset ${dataSet.id} calculation aborted`);
             errorsArray.push(...response.messages);
           }
         } else {
