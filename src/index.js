@@ -539,6 +539,7 @@ const api = {
    * @param {string} appId - ID of the cloud App that holds the model to calculate - can be used instead of supplying the actual model
    * @param {array} dataSets - Array of dataset objects formatted according to https://agenarisk.atlassian.net/wiki/spaces/PROTO/pages/785711115 section Common Elements: Data Set
    * @param {function} dataSetCallback - Optional function f(x) to be called after a dataset is calculated, where x is the calculated dataset object
+   * @param {array} errorsArray - Optional array to add error messages to
    *
    * @returns array of calculated dataset objects
    */
@@ -549,6 +550,7 @@ const api = {
     appId,
     dataSets,
     dataSetCallback,
+    errorsArray,
   }) => {
     api.log({ message: `Calculating a batch of: ${dataSets.length} datasets`, debugLevel: 4 });
 
@@ -637,6 +639,9 @@ const api = {
         if (!response.results) {
           functions.log(`Dataset ${dataSet.id} failed to calculate:`, functions.messageType.Error);
           functions.log(response.messages, functions.messageType.Error);
+          if (Array.isArray(errorsArray)) {
+            errorsArray.push(...response.messages);
+          }
         } else {
           const jobEndTime = new Date().getTime();
           updateCounters(response);
