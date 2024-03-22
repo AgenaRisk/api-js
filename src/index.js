@@ -379,6 +379,7 @@ const api = {
    *  or is formatted according to https://agenarisk.atlassian.net/wiki/spaces/PROTO/pages/785711115 section Common Elements: Data Set
    * @param {boolean} syncWait - Whether to wait on the first request before falling back to polling; optional; default: true
    * @param {number} pollInterval - interval between polling attempts; default: config.api.pollInterval
+   * @param {number} isInterrupted - optional callback to execute after each polling attempt; polling will be interupted if this returns true
    *
    * @returns calculation job response Object or error object
    */
@@ -392,6 +393,7 @@ const api = {
     body = {},
     appId,
     pollInterval = config.api.pollInterval,
+    isInterrupted,
   }) => {
     const effectiveBody = {
       ...body,
@@ -401,6 +403,13 @@ const api = {
       ...(observations && !dataSet && { dataSet: api.createDataset({ observations }) }),
       ...(dataSet && { dataSet: api.createDataset(dataSet) }),
     };
+
+    if (typeof isInterrupted === 'function' && isInterrupted()) {
+      return {
+        status: 'error',
+        messages: ['Aborted by requester'],
+      };
+    }
 
     const originalResponse = await api.sendRequest({
       url: `${server.trim().replace(/\/+$/, '')}/public/v1/calculate`,
@@ -437,11 +446,16 @@ const api = {
             messages: [`Maximum polling attempts (${config.api.pollMaxAttempts}) reached`, ...((pollResponse.messages && pollResponse.messages.length) ? [pollResponse.messages] : [])],
           };
         }
+
+        console.log('after polling: ', isInterrupted, '//', typeof isInterrupted, '//', typeof isInterrupted === 'function' && isInterrupted());
+        if (typeof isInterrupted === 'function' && isInterrupted()) {
+          break;
+        }
       }
-    } else {
-      api.log({ message: 'Original request resolved' });
-      return originalResponse;
     }
+
+    api.log({ message: 'Original request response returned' });
+    return originalResponse;
   },
 
   /**
@@ -540,6 +554,7 @@ const api = {
    * @param {array} dataSets - Array of dataset objects formatted according to https://agenarisk.atlassian.net/wiki/spaces/PROTO/pages/785711115 section Common Elements: Data Set
    * @param {function} dataSetCallback - Optional function f(x) to be called after a dataset is calculated, where x is the calculated dataset object
    * @param {array} errorsArray - Optional array to add error messages to
+   * @param {number} isInterrupted - optional callback to execute after each polling attempt; polling will be interupted if this returns true
    *
    * @returns array of calculated dataset objects
    */
@@ -551,6 +566,7 @@ const api = {
     dataSets,
     dataSetCallback,
     errorsArray,
+    isInterrupted,
   }) => {
     api.log({ message: `Calculating a batch of: ${dataSets.length} datasets`, debugLevel: 4 });
 
@@ -631,13 +647,13 @@ const api = {
         // const pollInterval = 1000 + functions.randBetween(1000, 5000);
         api.log({ message: `Sending calculate request for Dataset ${dataSet.id} with pollingInterval: ${pollInterval}`, debugLevel: 5 });
         const response = await api.calculate({
-          server, resolveBearerToken, model, appId, dataSet, syncWait: true, pollInterval,
+          server, resolveBearerToken, model, appId, dataSet, syncWait: true, pollInterval, isInterrupted,
         });
         responses.push(response);
         // eslint-disable-next-line no-param-reassign
         dataSet.done = true;
         if (!response.results) {
-          functions.log(`Dataset ${dataSet.id} failed to calculate:`, functions.messageType.Error);
+          functions.log(`Dataset ${dataSet.id} ${(typeof isInterrupted === 'function' && isInterrupted()) ? ' aborted by requester' : 'failed to calculate'}:`, functions.messageType.Error);
           functions.log(response.messages, functions.messageType.Error);
           if (Array.isArray(errorsArray)) {
             errorsArray.push(`Dataset ${dataSet.id} calculation aborted`);
