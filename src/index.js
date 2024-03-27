@@ -120,6 +120,11 @@ const functions = {
   },
 
   randBetween: (min, max) => Math.floor(Math.random() * (max - min + 1) + min),
+
+  filterHeaders: (headers) => Object.fromEntries(Object.entries(headers).filter(([key]) => [
+    'x-referer',
+    'user-id',
+  ].includes(`${key}`.toLowerCase()))),
 };
 
 const auth = {
@@ -257,7 +262,7 @@ const api = {
     bearerToken,
     url,
     params,
-    headers,
+    headers = {},
   }) => {
     let queryString = '';
     if (params) {
@@ -265,19 +270,15 @@ const api = {
     }
     const requestUrl = url + queryString;
 
-    let effectiveHeaders;
+    const effectiveHeaders = {
+      'Content-Type': 'text/plain; charset=utf-8',
+      ...headers,
+    };
 
-    if (headers) {
-      effectiveHeaders = headers;
-    } else {
-      effectiveHeaders = {
-        'Content-Type': 'text/plain; charset=utf-8',
-      };
-      if (bearerToken) {
-        effectiveHeaders.Authorization = `Bearer ${bearerToken}`;
-      } else if (auth.accessToken) {
-        effectiveHeaders.Authorization = `Bearer ${auth.accessToken}`;
-      }
+    if (bearerToken) {
+      effectiveHeaders.Authorization = `Bearer ${bearerToken}`;
+    } else if (auth.accessToken) {
+      effectiveHeaders.Authorization = `Bearer ${auth.accessToken}`;
     }
 
     api.log({ message: `Sending ${method} request to: ${requestUrl}`, debugLevel: 5 });
@@ -380,6 +381,7 @@ const api = {
    * @param {boolean} syncWait - Whether to wait on the first request before falling back to polling; optional; default: true
    * @param {number} pollInterval - interval between polling attempts; default: config.api.pollInterval
    * @param {number} isInterrupted - optional callback to execute after each polling attempt; polling will be interupted if this returns true
+   * @param {object} headers - Object custom headers to send along with the calculation request, only a specific headers are allowed
    *
    * @returns calculation job response Object or error object
    */
@@ -394,6 +396,7 @@ const api = {
     appId,
     pollInterval = config.api.pollInterval,
     isInterrupted,
+    headers = {},
   }) => {
     const effectiveBody = {
       ...body,
@@ -415,6 +418,7 @@ const api = {
       url: `${server.trim().replace(/\/+$/, '')}/public/v1/calculate`,
       ...(typeof resolveBearerToken === 'function' && { bearerToken: resolveBearerToken() }),
       body: JSON.stringify(effectiveBody),
+      headers: functions.filterHeaders(headers),
     });
 
     if (originalResponse.code === 202 && originalResponse.pollingUrl) {
@@ -555,6 +559,7 @@ const api = {
    * @param {function} dataSetCallback - Optional function f(x) to be called after a dataset is calculated, where x is the calculated dataset object
    * @param {array} errorsArray - Optional array to add error messages to
    * @param {number} isInterrupted - optional callback to execute after each polling attempt; polling will be interupted if this returns true
+   * @param {object} headers - Object custom headers to send along with the calculation request, only a specific headers are allowed
    *
    * @returns array of calculated dataset objects
    */
@@ -567,6 +572,7 @@ const api = {
     dataSetCallback,
     errorsArray,
     isInterrupted,
+    headers = {},
   }) => {
     api.log({ message: `Calculating a batch of: ${dataSets.length} datasets`, debugLevel: 4 });
 
@@ -647,7 +653,7 @@ const api = {
         // const pollInterval = 1000 + functions.randBetween(1000, 5000);
         api.log({ message: `Sending calculate request for Dataset ${dataSet.id} with pollingInterval: ${pollInterval}`, debugLevel: 5 });
         const response = await api.calculate({
-          server, resolveBearerToken, model, appId, dataSet, syncWait: true, pollInterval, isInterrupted,
+          server, resolveBearerToken, model, appId, dataSet, syncWait: true, pollInterval, isInterrupted, headers,
         });
         responses.push(response);
         // eslint-disable-next-line no-param-reassign
