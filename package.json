@@ -1,6 +1,6 @@
 {
   "name": "agena-api-js",
-  "version": "1.0.8",
+  "version": "1.0.9",
   "description": "Agena AI Cloud JavaScript API",
   "exports": {
     "script": "./dist/agena-api.js",

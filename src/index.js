@@ -560,6 +560,7 @@ const api = {
    * @param {array} errorsArray - Optional array to add error messages to
    * @param {number} isInterrupted - optional callback to execute after each polling attempt; polling will be interupted if this returns true
    * @param {object} headers - Object custom headers to send along with the calculation request, only a specific headers are allowed
+   * @param {object} rawResponses - Optional object to map raw responses for each individual dataset calculation
    *
    * @returns array of calculated dataset objects
    */
@@ -573,6 +574,7 @@ const api = {
     errorsArray,
     isInterrupted,
     headers = {},
+    rawResponses,
   }) => {
     api.log({ message: `Calculating a batch of: ${dataSets.length} datasets`, debugLevel: 4 });
 
@@ -656,6 +658,10 @@ const api = {
           server, resolveBearerToken, model, appId, dataSet, syncWait: true, pollInterval, isInterrupted, headers,
         });
         responses.push(response);
+        if (rawResponses) {
+          // eslint-disable-next-line no-param-reassign
+          rawResponses[dataSet.id] = response;
+        }
         // eslint-disable-next-line no-param-reassign
         dataSet.done = true;
         if (!response.results) {
