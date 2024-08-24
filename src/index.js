@@ -375,6 +375,7 @@ const api = {
    * @param {string} server - API server root; default: api.config.server
    * @param {function} resolveBearerToken - function to dynamically resolve accessToken valid at the time of the original or some future polling request; default: agena.getAccessToken().accessToken
    * @param {object} model - Object representing the model
+   * @param {string} modelPath - Local path of the model on the server
    * @param {string} appId - ID of the cloud App that holds the model to calculate - can be used instead of supplying the actual model
    * @param {array} observations - Array of observations, where each observation has: network (string ID), node (string ID) and entry (string value);
    *  or is formatted according to https://agenarisk.atlassian.net/wiki/spaces/PROTO/pages/785711115 section Common Elements: Data Set
@@ -389,6 +390,7 @@ const api = {
     server = config.api.server,
     resolveBearerToken,
     model,
+    modelPath,
     observations,
     dataSet,
     syncWait = true,
@@ -403,6 +405,7 @@ const api = {
       ...(typeof model === 'object' && { model }),
       ...(syncWait && { 'sync-wait': syncWait }),
       ...(appId && { appId }),
+      ...(modelPath && { modelPath }),
       ...(observations && !dataSet && { dataSet: api.createDataset({ observations }) }),
       ...(dataSet && { dataSet: api.createDataset(dataSet) }),
     };
@@ -554,6 +557,7 @@ const api = {
    * @param {string} server - API server root; default: api.config.server
    * @param {function} resolveBearerToken - function to dynamically resolve accessToken valid at the time of the original or some future polling request; default: agena.getAccessToken().accessToken
    * @param {object} model - Object representing the model
+   * @param {string} modelPath - Local path of the model on the server
    * @param {string} appId - ID of the cloud App that holds the model to calculate - can be used instead of supplying the actual model
    * @param {array} dataSets - Array of dataset objects formatted according to https://agenarisk.atlassian.net/wiki/spaces/PROTO/pages/785711115 section Common Elements: Data Set
    * @param {function} dataSetCallback - Optional function f(x) to be called after a dataset is calculated, where x is the calculated dataset object
@@ -568,6 +572,7 @@ const api = {
     server = config.api.server,
     resolveBearerToken,
     model,
+    modelPath,
     appId,
     dataSets,
     dataSetCallback,
@@ -655,7 +660,7 @@ const api = {
         // const pollInterval = 1000 + functions.randBetween(1000, 5000);
         api.log({ message: `Sending calculate request for Dataset ${dataSet.id} with pollingInterval: ${pollInterval}`, debugLevel: 5 });
         const response = await api.calculate({
-          server, resolveBearerToken, model, appId, dataSet, syncWait: true, pollInterval, isInterrupted, headers,
+          server, resolveBearerToken, model, modelPath, appId, dataSet, syncWait: true, pollInterval, isInterrupted, headers,
         });
         responses.push(response);
         if (rawResponses) {
