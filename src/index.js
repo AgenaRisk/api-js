@@ -379,6 +379,8 @@ const api = {
    * @param {string} appId - ID of the cloud App that holds the model to calculate - can be used instead of supplying the actual model
    * @param {array} observations - Array of observations, where each observation has: network (string ID), node (string ID) and entry (string value);
    *  or is formatted according to https://agenarisk.atlassian.net/wiki/spaces/PROTO/pages/785711115 section Common Elements: Data Set
+   * @param {object} dataSet - Alternative to observations, must contain: observations array and id string and
+   * is formatted according to https://agenarisk.atlassian.net/wiki/spaces/PROTO/pages/785711115 section Common Elements: Data Set
    * @param {boolean} syncWait - Whether to wait on the first request before falling back to polling; optional; default: true
    * @param {number} pollInterval - interval between polling attempts; default: config.api.pollInterval
    * @param {number} isInterrupted - optional callback to execute after each polling attempt; polling will be interupted if this returns true
@@ -407,7 +409,7 @@ const api = {
       ...(appId && { appId }),
       ...(modelPath && { modelPath }),
       ...(observations && !dataSet && { dataSet: api.createDataset({ observations }) }),
-      ...(dataSet && { dataSet: api.createDataset(dataSet) }),
+      ...(dataSet && !observations && { dataSet }),
     };
 
     if (typeof isInterrupted === 'function' && isInterrupted()) {
