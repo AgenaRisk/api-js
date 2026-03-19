@@ -56,6 +56,9 @@ if (outputDsIds.length > 0) {
       username: 'test@example.com',
       password: '1234567890',
     },
+    api: {
+      debug: true,
+    },
   });
   await agena.logIn();
   console.log('Logged in');
