@@ -385,6 +385,7 @@ const api = {
    * @param {number} pollInterval - interval between polling attempts; default: config.api.pollInterval
    * @param {number} isInterrupted - optional callback to execute after each polling attempt; polling will be interrupted if this returns true
    * @param {object} headers - Object custom headers to send along with the calculation request, only a specific headers are allowed
+   * @param {string} mode - Suggested mode of calculation used for subsequent display of results if archiving is enabled
    *
    * @returns calculation job response Object or error object
    */
@@ -401,6 +402,7 @@ const api = {
     pollInterval = config.api.pollInterval,
     isInterrupted,
     headers = {},
+    mode = 'calculation',
   }) => {
     const effectiveBody = {
       ...body,
@@ -410,6 +412,7 @@ const api = {
       ...(modelPath && { modelPath }),
       ...(observations && !dataSet && { dataSet: api.createDataset({ observations }) }),
       ...(dataSet && !observations && { dataSet }),
+      ...(mode && { mode }),
     };
 
     if (typeof isInterrupted === 'function' && isInterrupted()) {
@@ -568,6 +571,7 @@ const api = {
    * @param {number} isInterrupted - optional callback to execute after each polling attempt; polling will be interrupted if this returns true
    * @param {object} headers - Object custom headers to send along with the calculation request, only a specific headers are allowed
    * @param {object} rawResponses - Optional object to map raw responses for each individual dataset calculation
+   * @param {string} mode - Suggested mode of calculation used for subsequent display of results if archiving is enabled
    *
    * @returns array of calculated dataset objects
    */
@@ -583,6 +587,7 @@ const api = {
     isInterrupted,
     headers = {},
     rawResponses,
+    mode = 'calculation',
   }) => {
     api.log({ message: `Calculating a batch of: ${dataSets.length} datasets`, debugLevel: 4 });
 
@@ -663,7 +668,7 @@ const api = {
         // const pollInterval = 1000 + functions.randBetween(1000, 5000);
         api.log({ message: `Sending calculate request for Dataset ${dataSet.id} with pollingInterval: ${pollInterval}`, debugLevel: 5 });
         const response = await api.calculate({
-          server, resolveBearerToken, model, modelPath, appId, dataSet, syncWait: true, pollInterval, isInterrupted, headers,
+          server, resolveBearerToken, model, modelPath, appId, dataSet, syncWait: true, pollInterval, isInterrupted, headers, mode,
         });
         responses.push(response);
         if (rawResponses) {
