@@ -10,7 +10,7 @@ const config = {
     password: '',
     refreshInterval: 500,
     refreshPreemptBy: 5000,
-    clientId: 'agenarisk-cloud',
+    clientId: 'agena-ai-cloud',
     noGiveUp: false,
     debug: false,
   },
@@ -369,7 +369,7 @@ const api = {
 
   /**
    * Async calculation function
-   * * Either returns a cloud API response according to https://agenarisk.atlassian.net/wiki/spaces/PROTO/pages/785711115 section Response
+   * * Either returns a cloud API response according to https://agenarisk.atlassian.net/wiki/external/MmI0OTI5MTZmMzZkNDgxMjhmYjJlZTQzY2RjZWZjZTM section Response
    * * Or an object with status = error, message and messages array (in case there could be multiple messages)
    *
    * @param {string} server - API server root; default: api.config.server
@@ -378,12 +378,12 @@ const api = {
    * @param {string} modelPath - Local path of the model on the server
    * @param {string} appId - ID of the cloud App that holds the model to calculate - can be used instead of supplying the actual model
    * @param {array} observations - Array of observations, where each observation has: network (string ID), node (string ID) and entry (string value);
-   *  or is formatted according to https://agenarisk.atlassian.net/wiki/spaces/PROTO/pages/785711115 section Common Elements: Data Set
+   *  or is formatted according to https://agenarisk.atlassian.net/wiki/external/MmI0OTI5MTZmMzZkNDgxMjhmYjJlZTQzY2RjZWZjZTM section Common Elements: Data Set
    * @param {object} dataSet - Alternative to observations, must contain: observations array and id string and
-   * is formatted according to https://agenarisk.atlassian.net/wiki/spaces/PROTO/pages/785711115 section Common Elements: Data Set
+   * is formatted according to https://agenarisk.atlassian.net/wiki/external/MmI0OTI5MTZmMzZkNDgxMjhmYjJlZTQzY2RjZWZjZTM section Common Elements: Data Set
    * @param {boolean} syncWait - Whether to wait on the first request before falling back to polling; optional; default: true
    * @param {number} pollInterval - interval between polling attempts; default: config.api.pollInterval
-   * @param {number} isInterrupted - optional callback to execute after each polling attempt; polling will be interupted if this returns true
+   * @param {number} isInterrupted - optional callback to execute after each polling attempt; polling will be interrupted if this returns true
    * @param {object} headers - Object custom headers to send along with the calculation request, only a specific headers are allowed
    *
    * @returns calculation job response Object or error object
@@ -561,10 +561,11 @@ const api = {
    * @param {object} model - Object representing the model
    * @param {string} modelPath - Local path of the model on the server
    * @param {string} appId - ID of the cloud App that holds the model to calculate - can be used instead of supplying the actual model
-   * @param {array} dataSets - Array of dataset objects formatted according to https://agenarisk.atlassian.net/wiki/spaces/PROTO/pages/785711115 section Common Elements: Data Set
+   * @param {array} dataSets - Array of dataset objects formatted according to
+   *  https://agenarisk.atlassian.net/wiki/external/MmI0OTI5MTZmMzZkNDgxMjhmYjJlZTQzY2RjZWZjZTM section Common Elements: Data Set
    * @param {function} dataSetCallback - Optional function f(x) to be called after a dataset is calculated, where x is the calculated dataset object
    * @param {array} errorsArray - Optional array to add error messages to
-   * @param {number} isInterrupted - optional callback to execute after each polling attempt; polling will be interupted if this returns true
+   * @param {number} isInterrupted - optional callback to execute after each polling attempt; polling will be interrupted if this returns true
    * @param {object} headers - Object custom headers to send along with the calculation request, only a specific headers are allowed
    * @param {object} rawResponses - Optional object to map raw responses for each individual dataset calculation
    *
@@ -737,7 +738,7 @@ export default {
   init,
 
   /**
-   * Unless initialised prior to this call, include object with username and password fields
+   * Unless initialized prior to this call, include object with username and password fields
    *
    * @param {object} authConfig optional override to auth config
    */
